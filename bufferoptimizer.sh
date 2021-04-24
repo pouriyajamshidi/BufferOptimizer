@@ -1,14 +1,14 @@
 #!/bin/bash
 
+clear
+
 function getCurrentRecvBuf() {
-    ethtool -g ens160 | grep -A 15 "Current" | grep -i "rx:" | awk '{print $2}'
+    ethtool -g "$Interface" | grep -A 15 "Current" | grep -i "rx:" | awk '{print $2}'
 }
 
 function getCurrentRecvDrops() {
-    netstat ens160 -i | grep ens160 | awk '{print $5}'
+    netstat "$Interface" -i | grep "$Interface" | awk '{print $5}'
 }
-
-clear
 
 red=$(tput setaf 1)
 green=$(tput setaf 2)
@@ -17,7 +17,9 @@ cyan=$(tput setaf 6)
 nocolor=$(tput sgr0)
 
 if [[ -z $1 ]]; then
-    Interface="ens160"
+    echo "No interface was chosen. Available options are:"
+    ip -o link show | awk -F': ' '{print $2}'
+    exit 1
 else
     Interface="$1"
 fi
@@ -31,8 +33,8 @@ fi
 echo "${cyan}[+] Chosen $Interface to optimize ${nocolor}"
 echo "${cyan}[+] Chosen $InitBuffer as initial buffer size ${nocolor}"
 
-bufPreset=$(ethtool -g ens160 | grep "RX:" | head -1 | awk '{print $2}')
-bufCurrent=$(ethtool -g ens160 | grep "RX:" | tail -1 | awk '{print $2}')
+bufPreset=$(ethtool -g "$Interface" | grep "RX:" | head -1 | awk '{print $2}')
+bufCurrent=$(ethtool -g "$Interface" | grep "RX:" | tail -1 | awk '{print $2}')
 
 if [[ $bufCurrent -gt $bufPreset ]]; then
     echo "${red}[-] Current Buffer size $bufCurrent is greater than Preset buffer size $bufPreset ${nocolor}"
